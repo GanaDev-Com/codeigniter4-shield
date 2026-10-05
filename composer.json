@@ -1,0 +1,59 @@
+{
+    "name": "ganadev/codeigniter4-shield",
+    "description": "CodeIgniter 4 adapter for Ganadev Shield - adaptive application firewall.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Ganadev",
+            "homepage": "https://ganadev.com"
+        }
+    ],
+    "support": {
+        "issues": "https://github.com/GanaDev-Com/codeigniter4-shield/issues",
+        "source": "https://github.com/GanaDev-Com/codeigniter4-shield"
+    },
+    "keywords": ["security", "firewall", "waf", "codeigniter", "codeigniter4", "filter"],
+    "require": {
+        "php": "^8.2",
+        "ganadev/shield-core": "^1.2.1",
+        "codeigniter4/framework": "^4.3"
+    },
+    "require-dev": {
+        "codeigniter4/devkit": "^1.0",
+        "pestphp/pest": "^2.0|^3.0",
+        "phpstan/phpstan": "^2.1",
+        "laravel/pint": "^1.18"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ganadev\\Shield\\Codeigniter\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ganadev\\Shield\\Codeigniter\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "codeigniter4": {
+            "providers": [
+                "Ganadev\\Shield\\Codeigniter\\ShieldServiceProvider"
+            ]
+        }
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+        "analyse": "vendor/bin/phpstan analyse --memory-limit=512M",
+        "format": "vendor/bin/pint",
+        "format-test": "vendor/bin/pint --test"
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

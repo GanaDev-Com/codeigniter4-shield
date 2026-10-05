@@ -1,0 +1,53 @@
+title = "codeigniter4-shield gitleaks config"
+
+[[rules]]
+id = "aws-access-token"
+description = "AWS Access Key ID"
+regex = '''\bAKIA[0-9A-Z]{16}\b'''
+secretGroup = 0
+
+[[rules]]
+id = "github-pat"
+description = "GitHub Personal Access Token"
+regex = '''\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{36,255}\b'''
+secretGroup = 0
+
+[[rules]]
+id = "github-oauth-app"
+description = "GitHub OAuth App Token"
+regex = '''\bgithub_pat_[A-Za-z0-9_]{20,}\b'''
+secretGroup = 0
+
+[[rules]]
+id = "slack-token"
+description = "Slack Token"
+regex = '''\bxox[baprs]-[A-Za-z0-9-]{10,48}\b'''
+secretGroup = 0
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----'''
+secretGroup = 0
+
+[[rules]]
+id = "google-api-key"
+description = "Google API Key"
+regex = '''\bAIza[0-9A-Za-z\-_]{35}\b'''
+secretGroup = 0
+
+[[rules]]
+id = "stripe-api-key"
+description = "Stripe API Key"
+regex = '''\b(sk|rk)_(live|test)_[0-9a-zA-Z]{10,99}\b'''
+secretGroup = 0
+
+[allowlist]
+description = "Test/demo keys that are intentionally in repo"
+regexes = [
+    '''6LeIxAcTAAAA[A-Za-z0-9_-]+''',
+    '''6LepPrUtAAAA[A-Za-z0-9_-]+''',
+]
+paths = [
+    '''\.gitleaks\.toml$''',
+]

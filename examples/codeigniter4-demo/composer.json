@@ -1,0 +1,21 @@
+{
+    "name": "ganadev/codeigniter4-shield-demo",
+    "description": "Demo app for Ganadev CodeIgniter 4 Shield",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "codeigniter4/framework": "^4.3",
+        "ganadev/codeigniter4-shield": "@dev"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../../",
+            "options": {
+                "symlink": true
+            }
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}

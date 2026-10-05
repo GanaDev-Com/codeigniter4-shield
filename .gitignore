@@ -1,0 +1,6 @@
+/vendor/
+/build/
+/.phpunit.cache/
+/.phpstan/
+/composer.lock
+/shield-core/
