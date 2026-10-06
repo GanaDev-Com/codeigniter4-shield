@@ -26,7 +26,7 @@ final class Ci4TrustedCookie implements TrustedCookieInterface
         $json = json_encode($payload);
         $key = $this->getEncryptionKey();
 
-        return base64_encode($json . '|' . hash_hmac('sha256', $json, $key));
+        return base64_encode($json.'|'.hash_hmac('sha256', $json, $key));
     }
 
     public function validate(string $cookieValue, RequestContext $context): bool
@@ -49,12 +49,12 @@ final class Ci4TrustedCookie implements TrustedCookieInterface
         [$json, $hmac] = $parts;
 
         $key = $this->getEncryptionKey();
-        if (!hash_equals(hash_hmac('sha256', $json, $key), $hmac)) {
+        if (! hash_equals(hash_hmac('sha256', $json, $key), $hmac)) {
             return false;
         }
 
         $payload = json_decode($json, true);
-        if (!is_array($payload)) {
+        if (! is_array($payload)) {
             return false;
         }
 

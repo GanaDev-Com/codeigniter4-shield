@@ -66,8 +66,17 @@ final class ChallengeController
         $redirectResponse = redirect()->to($this->safeRedirect($request));
 
         if ($cookie !== '') {
-            $response = service('response');
-            $response->setCookie($this->engine->trustedCookieName(), $cookie, $this->config->trustedTtlMinutes * 60, '/', null, true, true, false, 'Lax');
+            $redirectResponse->setCookie(
+                $this->engine->trustedCookieName(),
+                $cookie,
+                $this->config->trustedTtlMinutes * 60,
+                '/',
+                null,
+                true,
+                true,
+                false,
+                'Lax'
+            );
         }
 
         return $redirectResponse;
