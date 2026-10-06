@@ -53,6 +53,6 @@ final class CodeIgniterCacheAdapter implements CacheAdapterInterface
 
     private function key(string $key): string
     {
-        return 'shield:'.$this->appId.':'.hash('sha256', $key);
+        return 'shield:'.$this->appId.':'.$key;
     }
 }
