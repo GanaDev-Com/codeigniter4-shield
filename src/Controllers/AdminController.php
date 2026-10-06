@@ -6,10 +6,12 @@ namespace Ganadev\Shield\Codeigniter\Controllers;
 
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
-use Ganadev\Shield\Core\Config\ShieldConfig;
-use Ganadev\Shield\Core\Rules\RuleRepository;
+use Config\Database;
 use Ganadev\Shield\Codeigniter\Repositories\Ci4BanRepository;
 use Ganadev\Shield\Codeigniter\Repositories\Ci4EventRepository;
+use Ganadev\Shield\Codeigniter\Support\TrustedProxyInspector;
+use Ganadev\Shield\Core\Config\ShieldConfig;
+use Ganadev\Shield\Core\Rules\RuleRepository;
 
 final class AdminController
 {
@@ -139,7 +141,7 @@ final class AdminController
         $exception = null;
 
         try {
-            $db = \Config\Database::connect();
+            $db = Database::connect();
             $db->initialize();
         } catch (\Throwable $e) {
             $dbOk = false;
@@ -156,7 +158,7 @@ final class AdminController
         $proxyWarning = null;
         $forwarded = $request->getHeaderLine('X-Forwarded-For') !== ''
             || $request->getHeaderLine('Forwarded') !== '';
-        if ($forwarded && ! \Ganadev\Shield\Codeigniter\Support\TrustedProxyInspector::hasConfiguredProxies()) {
+        if ($forwarded && ! TrustedProxyInspector::hasConfiguredProxies()) {
             $proxyWarning = 'Forwarded headers present but trusted proxies are not configured.';
         }
 

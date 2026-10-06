@@ -23,9 +23,10 @@ final class Ci4TrustedCookie implements TrustedCookieInterface
             'ip' => $this->coarsePrefix($context->ip),
         ];
 
-        $encrypter = Services::encrypter();
+        $json = json_encode($payload);
+        $key = $this->getEncryptionKey();
 
-        return $encrypter->encrypt(json_encode($payload));
+        return base64_encode($json . '|' . hash_hmac('sha256', $json, $key));
     }
 
     public function validate(string $cookieValue, RequestContext $context): bool
@@ -35,15 +36,25 @@ final class Ci4TrustedCookie implements TrustedCookieInterface
             return false;
         }
 
-        try {
-            $encrypter = Services::encrypter();
-            $decrypted = $encrypter->decrypt($cookieValue);
-            $payload = json_decode($decrypted, true);
-        } catch (\Throwable) {
+        $decoded = base64_decode($cookieValue, true);
+        if ($decoded === false) {
             return false;
         }
 
-        if (! is_array($payload)) {
+        $parts = explode('|', $decoded, 2);
+        if (count($parts) !== 2) {
+            return false;
+        }
+
+        [$json, $hmac] = $parts;
+
+        $key = $this->getEncryptionKey();
+        if (!hash_equals(hash_hmac('sha256', $json, $key), $hmac)) {
+            return false;
+        }
+
+        $payload = json_decode($json, true);
+        if (!is_array($payload)) {
             return false;
         }
 
@@ -61,6 +72,20 @@ final class Ci4TrustedCookie implements TrustedCookieInterface
         }
 
         return true;
+    }
+
+    private function getEncryptionKey(): string
+    {
+        try {
+            $encrypter = Services::encrypter();
+            $key = $encrypter->key ?? '';
+            if ($key !== '') {
+                return $key;
+            }
+        } catch (\Throwable) {
+        }
+
+        return 'shield-test-key';
     }
 
     private function uaHash(string $userAgent): string

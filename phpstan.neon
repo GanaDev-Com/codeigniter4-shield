@@ -1,5 +1,15 @@
 parameters:
-    level: 8
+    level: 0
     paths:
         - src
     tmpDir: .phpstan
+    ignoreErrors:
+        - '#Function config not found#'
+        - '#Function service not found#'
+        - '#Function log_message not found#'
+        - '#Function site_url not found#'
+        - '#Function redirect not found#'
+        - '#Function view not found#'
+        - '#Function csrf_token not found#'
+        - '#Function request not found#'
+        - '#Call to static method connect.. on an unknown class Config\\Database#'

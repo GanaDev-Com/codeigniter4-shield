@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-         bootstrap="vendor/autoload.php"
+         bootstrap="tests/bootstrap.php"
          colors="true"
          cacheDirectory=".phpunit.cache">
     <testsuites>
@@ -15,8 +15,6 @@
         </include>
     </source>
     <php>
-        <env name="CI4_DATABASE" value="sqlite"/>
-        <env name="CI4_DATABASE_DATABASE" value=":memory:"/>
-        <env name="CI4_CACHE" value="array"/>
+        <env name="APP_ENCRYPTION_KEY" value="base64:47v1LbFEGV5Tsf+IMtI66K/PVuyP/r9wGCE67OFTYZY="/>
     </php>
 </phpunit>

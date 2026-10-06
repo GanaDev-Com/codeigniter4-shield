@@ -52,9 +52,9 @@ $rule = $ruleId ?? 'unknown';
   <div class="card">
     <h1>Access Blocked</h1>
     <p>This request was denied by the application security layer. If you believe this is a mistake, contact the site administrator.</p>
-    <?php if ($showRule): ?>
+    <?php if ($showRule) { ?>
     <span class="rule"><?= esc($rule) ?></span>
-    <?php endif; ?>
+    <?php } ?>
     <div class="meta">App: <strong><?= esc($appId) ?></strong> &nbsp;·&nbsp; <?= date('Y-m-d H:i:s') ?></div>
     <div class="footer"><?= esc($title) ?></div>
   </div>

@@ -9,37 +9,64 @@ use CodeIgniter\Config\BaseConfig;
 class Shield extends BaseConfig
 {
     public bool $enabled = true;
+
     public string $mode = 'observe';
+
     public string $appId = 'my-app';
+
     public int $responseCode = 404;
+
     public int $decodeDepth = 2;
+
     public string $failMode = 'open';
+
     public int $thresholdChallenge = 10;
+
     public int $thresholdBan = 20;
+
     public int $thresholdStrongBan = 30;
+
     public array $banDurations = [15, 60, 360, 1440];
+
     public string $challengeDriver = 'turnstile';
+
     public int $uniqueUriLimit = 25;
+
     public int $behaviorWindowSeconds = 60;
+
     public int $notFoundLimit = 20;
-    public bool $missingRefererSignal = true;
+
     public array $suspiciousUserAgents = [];
+
+    public array $suspiciousUserAgentOverrides = [];
+
     public array $scannerUserAgents = [
         'sqlmap', 'nikto', 'metasploit', 'wpscan', 'dirbuster',
         'gobuster', 'masscan', 'nmap', 'nessus', 'acunetix',
         'x00c', 'zgrab', 'httpx',
     ];
+
     public int $scannerUaSignal = 4;
+
     public int $pathRateLimit = 30;
+
     public int $sensitivePathRateLimit = 8;
+
     public array $sensitivePaths = [
         '/login', '/wp-login.php', '/admin/login', '/administrator/',
         '/api/login', '/api/auth', '/user/login',
     ];
+
     public string $botMode = 'observe';
+
+    public bool $missingRefererSignal = true;
+
     public int $unverifiedClaimSignal = 4;
+
     public bool $crawlerVerificationEnabled = true;
+
     public int $crawlerVerificationTtlHours = 24;
+
     public array $crawlerHostnames = [
         'googlebot' => ['.googlebot.com', '.google.com'],
         'bingbot' => ['.search.msn.com'],
@@ -51,41 +78,72 @@ class Shield extends BaseConfig
         'dotbot' => ['.moz.com'],
         'ccbot' => ['.cc'],
     ];
+
     public array $crawlerIpRanges = [];
+
     public array $knownBotAgents = [
         'googlebot', 'bingbot', 'yandexbot', 'baiduspider', 'duckduckbot',
         'ahrefsbot', 'semrushbot', 'mj12bot', 'dotbot', 'bytespider',
         'ccbot', 'gptbot', 'chatgpt-user', 'claudebot', 'anthropic',
         'openai', 'oai-searchbot', 'perplexitybot',
     ];
+
     public bool $rulesPacksInjection = true;
+
     public bool $rulesPacksWordpress = false;
+
     public array $skipPaths = [];
+
     public bool $bodyInspectionEnabled = true;
+
     public int $bodyInspectionMaxBytes = 65536;
+
     public string $loggingLevel = 'suspicious';
+
     public bool $logBypassEvents = true;
+
     public int $retentionDays = 30;
+
     public array $apiPaths = [];
+
     public bool $apiDetectAccept = true;
+
     public bool $adminEnabled = false;
+
     public string $adminAuthorize = '';
+
     public string $adminPrefix = 'shield';
+
     public array $allowlistHosts = [];
+
     public array $allowlistPaths = [];
+
     public array $allowlistIps = [];
+
     public bool $trustedEnabled = true;
+
     public int $trustedTtlMinutes = 60;
+
     public int $maxUriLength = 2048;
+
     public int $banCacheTtlSeconds = 30;
+
     public int $escalationStep = 5;
+
     public array $sensitiveQueryParameters = ['token', 'password', 'passwd', 'key', 'secret', 'code', 'auth'];
+
     public string $ruleVersion = '1.0.0';
+
     public string $blockedView = 'shield/blocked';
+
     public string $challengeView = 'shield/challenge';
+
     public string $brandingTitle = 'Ganadev CodeIgniter Shield';
+
     public string $brandingAccentColor = '#22d3ee';
+
     public string $brandingBackgroundColor = '#0b1220';
+
     public bool $brandingShowRuleId = false;
 
     public function toArray(): array
@@ -138,6 +196,9 @@ class Shield extends BaseConfig
                     'ip_ranges' => $this->crawlerIpRanges,
                 ],
                 'known_agents' => $this->knownBotAgents,
+                'known_bot_agents' => $this->knownBotAgents,
+                'suspicious_user_agent_overrides' => $this->suspiciousUserAgentOverrides,
+                'missing_referer_signal' => $this->missingRefererSignal,
             ],
             'rules' => [
                 'packs' => [

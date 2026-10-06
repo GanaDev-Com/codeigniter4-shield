@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Tests\Unit;
 
-use Ganadev\Shield\Core\Context\RequestContext;
 use Ganadev\Shield\Codeigniter\Trust\Ci4TrustedCookie;
+use Ganadev\Shield\Core\Context\RequestContext;
 
 it('issues a cookie that validates for the same request context', function () {
     $cookie = new Ci4TrustedCookie;

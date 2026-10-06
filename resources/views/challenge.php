@@ -56,9 +56,9 @@ $title = $branding['title'] ?? 'Ganadev CodeIgniter Shield';
     <h1>Verify you are human</h1>
     <p>Complete the check below to continue. Automated traffic is not allowed.</p>
 
-    <?php if ($error): ?>
+    <?php if ($error) { ?>
       <div class="alert">Verification failed. Please try again.</div>
-    <?php endif; ?>
+    <?php } ?>
 
     <form id="shield-form" method="post" action="<?= site_url('shield/challenge/verify') ?>">
       <input type="hidden" name="<?= csrf_token() ?>" value="<?= csrf_hash() ?>">
@@ -66,15 +66,15 @@ $title = $branding['title'] ?? 'Ganadev CodeIgniter Shield';
       <input type="hidden" name="shield_challenge_token" id="shield-challenge-token" value="<?= esc($testToken) ?>">
 
       <div class="widget">
-        <?php if ($driver === 'recaptcha'): ?>
+        <?php if ($driver === 'recaptcha') { ?>
           <div class="g-recaptcha" data-sitekey="<?= esc($siteKey) ?>" data-callback="onChallengeSolved"></div>
           <script src="https://www.google.com/recaptcha/api.js" async defer></script>
-        <?php elseif ($driver === 'null'): ?>
+        <?php } elseif ($driver === 'null') { ?>
           <p style="color:#93a4b8;font-size:14px;margin:18px 0 0;">Press Verify to continue.</p>
-        <?php else: ?>
+        <?php } else { ?>
           <div class="cf-turnstile" data-sitekey="<?= esc($siteKey) ?>" data-callback="onChallengeSolved"></div>
           <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-        <?php endif; ?>
+        <?php } ?>
       </div>
 
       <button type="submit">Verify</button>

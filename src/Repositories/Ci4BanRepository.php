@@ -4,22 +4,21 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Repositories;
 
-use CodeIgniter\Database\BaseBuilder;
+use Ganadev\Shield\Codeigniter\Models\SecurityIpBan;
 use Ganadev\Shield\Core\Persistence\BanRepositoryInterface;
 use Ganadev\Shield\Core\Reputation\BanRecord;
 use Ganadev\Shield\Core\Reputation\BanStatus;
-use Ganadev\Shield\Codeigniter\Models\SecurityIpBan;
 
 final class Ci4BanRepository implements BanRepositoryInterface
 {
     public function findActiveByIp(string $ip): ?BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $row = $model->where('ip_address', $ip)
             ->whereIn('status', [BanStatus::Active->value, BanStatus::ManualBlock->value])
             ->groupStart()
-                ->where('expires_at IS NULL', null, false)
-                ->orWhere('expires_at >', date('Y-m-d H:i:s'))
+            ->where('expires_at IS NULL', null, false)
+            ->orWhere('expires_at >', date('Y-m-d H:i:s'))
             ->groupEnd()
             ->orderBy('banned_at', 'DESC')
             ->first();
@@ -29,7 +28,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function findLatestByIp(string $ip): ?BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $row = $model->where('ip_address', $ip)
             ->orderBy('banned_at', 'DESC')
             ->first();
@@ -39,7 +38,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function findById(string $id): ?BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $row = $model->find($id);
 
         return is_array($row) ? $this->toRecord($row) : null;
@@ -47,7 +46,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function createBan(BanRecord $record): BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $model->insert([
             'ip_address' => $record->ipAddress,
             'status' => $record->status->value,
@@ -69,7 +68,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function release(BanRecord $ban, string $reason, ?string $actor): BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $model->update($ban->id, [
             'status' => BanStatus::Released->value,
             'released_at' => date('Y-m-d H:i:s'),
@@ -84,7 +83,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function extend(BanRecord $ban, \DateTimeImmutable $expiresAt, ?string $actor): BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $model->update($ban->id, [
             'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
             'metadata' => json_encode(array_merge(
@@ -98,7 +97,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function markChallengePassed(BanRecord $ban, \DateTimeImmutable $at): BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $model->update($ban->id, [
             'status' => BanStatus::Released->value,
             'released_at' => $at->format('Y-m-d H:i:s'),
@@ -110,7 +109,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function touchLastSeen(BanRecord $ban, \DateTimeImmutable $at): BanRecord
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $model->update($ban->id, ['last_seen_at' => $at->format('Y-m-d H:i:s')]);
 
         return $this->toRecord($model->find($ban->id));
@@ -118,7 +117,7 @@ final class Ci4BanRepository implements BanRepositoryInterface
 
     public function paginate(array $filters = [], int $perPage = 50)
     {
-        $model = new SecurityIpBan();
+        $model = new SecurityIpBan;
         $builder = $model->builder();
 
         if (! empty($filters['ip'])) {

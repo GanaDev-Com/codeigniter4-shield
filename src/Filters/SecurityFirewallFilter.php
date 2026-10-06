@@ -4,16 +4,17 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Filters;
 
+use CodeIgniter\Events\Events;
 use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
 use Ganadev\Shield\Core\Config\ShieldConfig;
 use Ganadev\Shield\Core\Context\RequestContext;
 use Ganadev\Shield\Core\Detection\BehaviorCounters;
 use Ganadev\Shield\Core\Engine\EngineResult;
 use Ganadev\Shield\Core\Engine\ShieldEngine;
 use Ganadev\Shield\Core\Privacy\UriMasker;
-use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
 
 final class SecurityFirewallFilter implements FilterInterface
 {
@@ -43,7 +44,7 @@ final class SecurityFirewallFilter implements FilterInterface
         }
 
         if ($result->shouldBlock()) {
-            \CodeIgniter\Events\Events::trigger('ShieldBlocked', $context->ip, $result->verdict->ruleId ?? 'unknown', $result->verdict->reason, $result->score->total, $this->maskUri($context->rawUri), $context->method);
+            Events::trigger('ShieldBlocked', $context->ip, $result->verdict->ruleId ?? 'unknown', $result->verdict->reason, $result->score->total, $this->maskUri($context->rawUri), $context->method);
 
             return $this->blockResponse($request, $result);
         }
@@ -201,7 +202,7 @@ final class SecurityFirewallFilter implements FilterInterface
         $response->setJSON([
             'error' => 'request_blocked',
             'app_id' => $this->config->appId,
-            'rule_id' => $result->verdict->ruleId,
+            'rule_id' => $result->verdict->ruleId ?? 'unknown',
             'decision' => $result->verdict->decision->value,
             'score' => $result->verdict->score,
         ]);

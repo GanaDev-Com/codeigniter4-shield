@@ -6,12 +6,10 @@ namespace Ganadev\Shield\Codeigniter\Tests;
 
 use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
-use CodeIgniter\Test\FeatureTestTrait;
 
 abstract class TestCase extends CIUnitTestCase
 {
     use DatabaseTestTrait;
-    use FeatureTestTrait;
 
     protected $namespace = 'Ganadev\Shield\Codeigniter';
     protected $seed = '';
@@ -21,15 +19,19 @@ abstract class TestCase extends CIUnitTestCase
     {
         parent::setUp();
 
-        $this->db->table('security_ip_bans')->emptyTable();
-        $this->db->table('security_events')->emptyTable();
+        $config = new \Config\Encryption();
+        $config->key = 'base64:47v1LbFEGV5Tsf+IMtI66K/PVuyP/r9wGCE67OFTYZY=';
+        $config->driver = 'OpenSSL';
+
+        $encrypter = \Config\Services::encrypter($config);
+        \Config\Services::injectMock('encrypter', $encrypter);
+
+        $cache = \Config\Services::cache();
+        \Config\Services::injectMock('cache', $cache);
     }
 
     protected function tearDown(): void
     {
         parent::tearDown();
-
-        $this->db->table('security_ip_bans')->emptyTable();
-        $this->db->table('security_events')->emptyTable();
     }
 }

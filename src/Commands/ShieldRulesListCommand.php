@@ -11,9 +11,13 @@ use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
 final class ShieldRulesListCommand extends BaseCommand
 {
     protected $group = 'Shield';
+
     protected $name = 'shield:rules:list';
+
     protected $description = 'List loaded threat rules and their version.';
+
     protected $usage = 'shield:rules:list [--disabled]';
+
     protected $options = [
         '--disabled' => 'Show disabled rules too',
     ];
@@ -21,7 +25,7 @@ final class ShieldRulesListCommand extends BaseCommand
     public function run(array $params): void
     {
         $showDisabled = isset($params['disabled']);
-        $resolver = new ShieldResolver();
+        $resolver = new ShieldResolver;
         $rules = $resolver->rules();
 
         $rows = [];

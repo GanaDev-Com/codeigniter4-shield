@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Tests\Unit;
 
+use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
+use Ganadev\Shield\Codeigniter\Repositories\CachedBanRepository;
 use Ganadev\Shield\Core\Persistence\BanRepositoryInterface;
 use Ganadev\Shield\Core\Reputation\BanRecord;
 use Ganadev\Shield\Core\Reputation\BanStatus;
-use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
-use Ganadev\Shield\Codeigniter\Repositories\CachedBanRepository;
 
 function activeBanRecord(string $ip): BanRecord
 {

@@ -6,6 +6,7 @@ namespace Ganadev\Shield\Codeigniter\Commands;
 
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
+use Ganadev\Shield\Codeigniter\Support\InputValue;
 use Ganadev\Shield\Core\Clock\SystemClock;
 use Ganadev\Shield\Core\Config\ShieldConfig;
 use Ganadev\Shield\Core\Context\RequestContext;
@@ -25,17 +26,21 @@ use Ganadev\Shield\Core\Rules\DefaultRules;
 use Ganadev\Shield\Core\Rules\RuleRepository;
 use Ganadev\Shield\Core\Scoring\RiskScorer;
 use Ganadev\Shield\Core\Trust\TrustedCookieInterface;
-use Ganadev\Shield\Codeigniter\Support\InputValue;
 
 final class ShieldReplayCommand extends BaseCommand
 {
     protected $group = 'Shield';
+
     protected $name = 'shield:replay';
+
     protected $description = 'Replay a corpus/event export against the current threat rules.';
+
     protected $usage = 'shield:replay <file> [--pack-wordpress] [--min-rate=0.98]';
+
     protected $arguments = [
         'file' => 'JSON corpus or security-events export',
     ];
+
     protected $options = [
         '--pack-wordpress' => 'Enable the WordPress rule pack for this run',
         '--min-rate' => 'Minimum detection rate for the exit code (default: 0.98)',

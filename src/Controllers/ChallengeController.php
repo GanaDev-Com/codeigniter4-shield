@@ -63,14 +63,14 @@ final class ChallengeController
         $this->engine->markChallengePassed($context->ip);
         $cookie = $this->engine->issueTrustedCookie($context);
 
-        $redirect = redirect()->to($this->safeRedirect($request));
+        $redirectResponse = redirect()->to($this->safeRedirect($request));
 
         if ($cookie !== '') {
             $response = service('response');
-            $response->setCookie($this->engine->trustedCookieName(), $cookie, $this->config->trustedTtlMinutes * 60);
+            $response->setCookie($this->engine->trustedCookieName(), $cookie, $this->config->trustedTtlMinutes * 60, '/', null, true, true, false, 'Lax');
         }
 
-        return $redirect;
+        return $redirectResponse;
     }
 
     private function context(RequestInterface $request): RequestContext

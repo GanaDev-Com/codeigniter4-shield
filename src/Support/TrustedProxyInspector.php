@@ -25,7 +25,7 @@ final class TrustedProxyInspector
 
     public static function forwardedHeaderSeen(array $server): bool
     {
-        foreach ['HTTP_X_FORWARDED_FOR', 'HTTP_FORWARDED', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP'] as $key) {
+        foreach (['HTTP_X_FORWARDED_FOR', 'HTTP_FORWARDED', 'HTTP_CF_CONNECTING_IP', 'HTTP_X_REAL_IP'] as $key) {
             if (($server[$key] ?? '') !== '') {
                 return true;
             }

@@ -12,6 +12,7 @@ use Ganadev\Shield\Core\Trust\CrawlerVerifierInterface;
 final class DnsCrawlerVerifier implements CrawlerVerifierInterface
 {
     private const CACHE_PREFIX = 'crawler-verify:';
+
     private const CACHE_NONE = 'none';
 
     private readonly ?\Closure $dnsResolver;

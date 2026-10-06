@@ -4,21 +4,21 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Repositories;
 
+use Ganadev\Shield\Codeigniter\Models\SecurityEvent as SecurityEventModel;
 use Ganadev\Shield\Core\Events\SecurityEvent;
 use Ganadev\Shield\Core\Persistence\EventRepositoryInterface;
-use Ganadev\Shield\Codeigniter\Models\SecurityEvent as SecurityEventModel;
 
 final class Ci4EventRepository implements EventRepositoryInterface
 {
     public function record(SecurityEvent $event): void
     {
-        $model = new SecurityEventModel();
+        $model = new SecurityEventModel;
         $model->insert($event->toArray());
     }
 
     public function pruneOlderThan(\DateTimeImmutable $cutoff): int
     {
-        $model = new SecurityEventModel();
+        $model = new SecurityEventModel;
         $builder = $model->builder();
         $builder->where('created_at <', $cutoff->format('Y-m-d H:i:s'));
 
@@ -27,7 +27,7 @@ final class Ci4EventRepository implements EventRepositoryInterface
 
     public function paginate(array $filters = [], int $perPage = 50)
     {
-        $model = new SecurityEventModel();
+        $model = new SecurityEventModel;
         $builder = $model->builder();
 
         if (! empty($filters['ip'])) {

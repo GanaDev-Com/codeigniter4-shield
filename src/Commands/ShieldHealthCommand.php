@@ -6,6 +6,7 @@ namespace Ganadev\Shield\Codeigniter\Commands;
 
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
+use Config\Database;
 use Ganadev\Shield\Codeigniter\Support\TrustedProxyInspector;
 
 final class ShieldHealthCommand extends BaseCommand
@@ -13,8 +14,11 @@ final class ShieldHealthCommand extends BaseCommand
     private const PROBE_IP = '66.249.66.1';
 
     protected $group = 'Shield';
+
     protected $name = 'shield:health';
+
     protected $description = 'Check Ganadev Shield component health.';
+
     protected $usage = 'shield:health';
 
     public function run(array $params): void
@@ -22,7 +26,7 @@ final class ShieldHealthCommand extends BaseCommand
         $healthy = true;
 
         try {
-            $db = \Config\Database::connect();
+            $db = Database::connect();
             $db->initialize();
             $dbStatus = 'ok';
         } catch (\Throwable $e) {

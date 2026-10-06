@@ -11,9 +11,13 @@ use Ganadev\Shield\Codeigniter\Models\SecurityEvent;
 final class ShieldReportCommand extends BaseCommand
 {
     protected $group = 'Shield';
+
     protected $name = 'shield:report';
+
     protected $description = 'Print a security event summary report.';
+
     protected $usage = 'shield:report [--host=]';
+
     protected $options = [
         '--host' => 'Filter by host',
     ];
@@ -22,7 +26,7 @@ final class ShieldReportCommand extends BaseCommand
     {
         $host = $params['host'] ?? null;
 
-        $model = new SecurityEvent();
+        $model = new SecurityEvent;
         $builder = $model->builder();
 
         if ($host !== null) {

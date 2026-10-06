@@ -9,7 +9,6 @@ use Ganadev\Shield\Codeigniter\Controllers\ChallengeController;
 /**
  * @var RouteCollection $routes
  */
-
 $routes->get('shield/challenge', [ChallengeController::class, 'show'], ['as' => 'shield.challenge']);
 $routes->post('shield/challenge/verify', [ChallengeController::class, 'verify'], ['as' => 'shield.challenge.verify']);
 

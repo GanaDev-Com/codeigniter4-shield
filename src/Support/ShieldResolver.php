@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Support;
 
+use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
+use Ganadev\Shield\Codeigniter\Challenge\NullTestDriver;
+use Ganadev\Shield\Codeigniter\Challenge\RecaptchaDriver;
+use Ganadev\Shield\Codeigniter\Challenge\TurnstileDriver;
+use Ganadev\Shield\Codeigniter\Config\Shield as ShieldConfigClass;
+use Ganadev\Shield\Codeigniter\Repositories\CachedBanRepository;
+use Ganadev\Shield\Codeigniter\Repositories\Ci4BanRepository;
+use Ganadev\Shield\Codeigniter\Repositories\Ci4EventRepository;
+use Ganadev\Shield\Codeigniter\Trust\Ci4TrustedCookie;
+use Ganadev\Shield\Codeigniter\Trust\DnsCrawlerVerifier;
 use Ganadev\Shield\Core\Challenge\ChallengeDriverInterface;
 use Ganadev\Shield\Core\Clock\SystemClock;
 use Ganadev\Shield\Core\Config\ShieldConfig;
@@ -17,22 +27,12 @@ use Ganadev\Shield\Core\Reputation\RiskDecay;
 use Ganadev\Shield\Core\Rules\DefaultRules;
 use Ganadev\Shield\Core\Rules\RuleRepository;
 use Ganadev\Shield\Core\Scoring\RiskScorer;
-use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
-use Ganadev\Shield\Codeigniter\Challenge\NullTestDriver;
-use Ganadev\Shield\Codeigniter\Challenge\RecaptchaDriver;
-use Ganadev\Shield\Codeigniter\Challenge\TurnstileDriver;
-use Ganadev\Shield\Codeigniter\Config\Shield as ShieldConfigClass;
-use Ganadev\Shield\Codeigniter\Repositories\CachedBanRepository;
-use Ganadev\Shield\Codeigniter\Repositories\Ci4BanRepository;
-use Ganadev\Shield\Codeigniter\Repositories\Ci4EventRepository;
-use Ganadev\Shield\Codeigniter\Trust\Ci4TrustedCookie;
-use Ganadev\Shield\Codeigniter\Trust\DnsCrawlerVerifier;
 
 final class ShieldResolver
 {
     public function config(): ShieldConfig
     {
-        $configClass = new ShieldConfigClass();
+        $configClass = new ShieldConfigClass;
 
         return ShieldConfig::fromArray($configClass->toArray());
     }

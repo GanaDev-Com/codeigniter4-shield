@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter;
 
-use CodeIgniter\Events\Events;
 use Ganadev\Shield\Codeigniter\Commands\ShieldHealthCommand;
 use Ganadev\Shield\Codeigniter\Commands\ShieldPruneCommand;
 use Ganadev\Shield\Codeigniter\Commands\ShieldReleaseCommand;
@@ -19,7 +18,7 @@ final class ShieldServiceProvider
 {
     public static function register(): void
     {
-        $resolver = new ShieldResolver();
+        $resolver = new ShieldResolver;
 
         service('singleton', 'shield.resolver', fn () => $resolver);
         service('singleton', 'shield.config', fn () => $resolver->config());

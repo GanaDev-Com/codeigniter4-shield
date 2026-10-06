@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Tests\Unit;
 
-use Ganadev\Shield\Core\Config\ShieldConfig;
 use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
 use Ganadev\Shield\Codeigniter\Trust\DnsCrawlerVerifier;
+use Ganadev\Shield\Core\Config\ShieldConfig;
 
 function makeVerifier(array $config, callable $dns): DnsCrawlerVerifier
 {

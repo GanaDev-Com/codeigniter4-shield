@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Tests\Unit;
 
-use Ganadev\Shield\Core\Challenge\ChallengeDriverInterface;
-use Ganadev\Shield\Core\Context\RequestContext;
 use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
 use Ganadev\Shield\Codeigniter\Challenge\NullTestDriver;
 use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
+use Ganadev\Shield\Core\Challenge\ChallengeDriverInterface;
+use Ganadev\Shield\Core\Context\RequestContext;
 
 it('namespaces cache keys with the app id', function () {
     $adapter = new CodeIgniterCacheAdapter(service('cache'), 'my-app');
@@ -60,7 +60,7 @@ it('resolves a challenge driver from the container', function () {
 
 it('treats an env-null driver value as the null test driver', function () {
     config('Shield')->challengeDriver = '';
-    $resolver = new ShieldResolver();
+    $resolver = new ShieldResolver;
 
     expect($resolver->challengeDriver())->toBeInstanceOf(NullTestDriver::class);
 
