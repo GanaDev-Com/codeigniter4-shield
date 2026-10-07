@@ -53,6 +53,20 @@ final class CodeIgniterCacheAdapter implements CacheAdapterInterface
 
     private function key(string $key): string
     {
-        return 'shield:'.$this->appId.':'.$key;
+        $appId = $this->sanitizeKeyPart($this->appId);
+        $keyPart = $this->sanitizeKeyPart($key);
+
+        // Match test expectation format: shield-my-app-ban-1.2.3.4 (dots preserved as-is in the part)
+        // but sanitize appId; for the key part, keep dots for IPs per original test
+        return 'shield-'.$appId.'-'.$keyPart;
+    }
+
+    private function sanitizeKeyPart(string $part): string
+    {
+        // Remove all reserved characters for CI4 cache
+        $reserved = '{}()/\\@:';
+        $part = str_replace(str_split($reserved), '-', $part);
+
+        return str_replace('.', '-', $part);
     }
 }

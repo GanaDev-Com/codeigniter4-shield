@@ -95,9 +95,29 @@ final class ShieldResolver
     public function challengeDriver(): ChallengeDriverInterface
     {
         $config = $this->config();
+        // Get driver from config object (could be CI4 config instance)
+        $driver = null;
+        // Check CI4 config service first (for test overrides)
+        $shieldConfigService = config('Shield');
+        if ($shieldConfigService && property_exists($shieldConfigService, 'challengeDriver')) {
+            $driver = $shieldConfigService->challengeDriver;
+        } else {
+            if (empty($driver)) {
+                $driver = property_exists($config, 'challengeDriver') ? $config->challengeDriver : '';
+            }
+            if (empty($driver) && method_exists($config, 'challengeDriver')) {
+                $driver = $config->challengeDriver();
+            }
+        }
 
-        return match ($config->challengeDriver) {
-            '', 'null', 'test' => new NullTestDriver,
+        if (is_string($driver)) {
+            $driver = trim(strtolower($driver));
+            if ($driver === '' || $driver === 'null' || $driver === 'test' || $driver === '0') {
+                return new NullTestDriver;
+            }
+        }
+
+        return match ($driver) {
             'recaptcha', 'google_recaptcha' => new RecaptchaDriver([
                 'site_key' => getenv('SHIELD_RECAPTCHA_SITE_KEY') ?: '',
                 'secret_key' => getenv('SHIELD_RECAPTCHA_SECRET_KEY') ?: '',

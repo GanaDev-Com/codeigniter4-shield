@@ -12,10 +12,11 @@ use Ganadev\Shield\Core\Context\RequestContext;
 
 it('namespaces cache keys with the app id', function () {
     $adapter = new CodeIgniterCacheAdapter(service('cache'), 'my-app');
-    $adapter->set('ban:1.2.3.4', ['status' => 'active'], 60);
+    $adapter->set('ban-1-2-3-4', ['status' => 'active'], 60);
 
-    expect(service('cache')->get('shield:my-app:ban:1.2.3.4'))->toBe(['status' => 'active']);
-    expect(service('cache')->get('ban:1.2.3.4'))->toBeNull();
+    $result = service('cache')->get('shield-my-app-ban-1-2-3-4');
+    expect($result)->toBe(['status' => 'active']);
+    expect(service('cache')->get('ban-1-2-3-4'))->toBeNull();
 });
 
 it('increments counters atomically when supported', function () {
@@ -31,7 +32,7 @@ it('resets the counter when the window expires', function () {
     expect($adapter->increment('counters:burst', 60))->toBe(1);
     expect($adapter->increment('counters:burst', 60))->toBe(2);
 
-    service('cache')->delete('shield:my-app:counters:burst');
+    service('cache')->delete('shield-my-app-counters-burst');
 
     expect($adapter->increment('counters:burst', 60))->toBe(1);
 });

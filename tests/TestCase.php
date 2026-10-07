@@ -8,6 +8,8 @@ use CodeIgniter\Test\CIUnitTestCase;
 use CodeIgniter\Test\DatabaseTestTrait;
 use Config\Encryption;
 use Config\Services;
+use Ganadev\Shield\Codeigniter\ShieldServiceProvider;
+use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
 
 abstract class TestCase extends CIUnitTestCase
 {
@@ -32,6 +34,15 @@ abstract class TestCase extends CIUnitTestCase
 
         $cache = Services::cache();
         Services::injectMock('cache', $cache);
+
+        ShieldServiceProvider::register();
+        // Ensure challenge service is registered for unit tests
+        if (function_exists('service')) {
+            if (service('shield.challenge') === null) {
+                $resolver = service('shield.resolver') ?? new ShieldResolver;
+                Services::injectMock('shield.challenge', $resolver->challengeDriver());
+            }
+        }
     }
 
     protected function tearDown(): void

@@ -41,20 +41,42 @@ final class ShieldServiceProvider
 
     private static function registerCommands(): void
     {
+        if (! class_exists('\\Config\\Commands')) {
+            return;
+        }
+
         $commands = config('Commands');
-        $commands->shield = [
-            ShieldPruneCommand::class,
-            ShieldReleaseCommand::class,
-            ShieldHealthCommand::class,
-            ShieldReportCommand::class,
-            ShieldRulesListCommand::class,
-            ShieldReplayCommand::class,
-        ];
+        if ($commands === null) {
+            return;
+        }
+
+        if (property_exists($commands, 'shield')) {
+            $commands->shield = array_merge($commands->shield ?? [], [
+                ShieldPruneCommand::class,
+                ShieldReleaseCommand::class,
+                ShieldHealthCommand::class,
+                ShieldReportCommand::class,
+                ShieldRulesListCommand::class,
+                ShieldReplayCommand::class,
+            ]);
+        } else {
+            $commands->shield = [
+                ShieldPruneCommand::class,
+                ShieldReleaseCommand::class,
+                ShieldHealthCommand::class,
+                ShieldReportCommand::class,
+                ShieldRulesListCommand::class,
+                ShieldReplayCommand::class,
+            ];
+        }
     }
 
     private static function registerRoutes(): void
     {
         $routes = service('routes');
+        if ($routes === null || ! method_exists($routes, 'load')) {
+            return;
+        }
         $routes->load(__DIR__.'/../routes/shield.php');
     }
 

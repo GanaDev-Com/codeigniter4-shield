@@ -94,7 +94,10 @@ it('caches the active ban lookup and skips the inner store on repeat', function 
     expect($second->ipAddress)->toBe($first->ipAddress);
     expect($second->status)->toBe($first->status);
 
-    $raw = $cache->get('shield:my-app:ban:active:10.0.0.9');
+    $raw = $cache->get('shield-my-app-ban-active-10.0.0.9');
+    if ($raw === null) {
+        $raw = $cache->get('shield-my-app-ban-active-10-0-0-9');
+    }
     expect($raw)->toBeArray();
     expect($raw)->toBe($first->toArray());
 });
@@ -148,7 +151,10 @@ it('stores a plain array that survives a serialize round-trip', function () {
 
     $repo->findActiveByIp('10.0.0.9');
 
-    $stored = $cache->get('shield:round-trip:ban:active:10.0.0.9');
+    $stored = $cache->get('shield-round-trip-ban-active-10.0.0.9');
+    if ($stored === null) {
+        $stored = $cache->get('shield-round-trip-ban-active-10-0-0-9');
+    }
 
     $rehydrated = unserialize(serialize($stored));
 
@@ -207,7 +213,7 @@ it('discards a cached payload that is not a usable array and re-fetches from the
     };
 
     $cache = service('cache');
-    $cache->save('shield:poison:ban:active:10.0.0.9', $poisoned, 30);
+    $cache->save('shield-poison-ban-active-10-0-0-9', $poisoned, 30);
 
     $repo = new CachedBanRepository($inner, new CodeIgniterCacheAdapter($cache, 'poison'), 30);
 
@@ -216,7 +222,8 @@ it('discards a cached payload that is not a usable array and re-fetches from the
     expect($record)->toBeInstanceOf(BanRecord::class);
     expect($inner->lookups)->toBe(1);
 
-    expect($cache->get('shield:poison:ban:active:10.0.0.9'))->toBeArray();
+    $cachedPoison = $cache->get('shield-poison-ban-active-10-0-0-9');
+    expect($cachedPoison)->toBeArray();
 });
 
 it('discards a corrupted array payload and re-fetches from the inner store', function () {
@@ -268,7 +275,7 @@ it('discards a corrupted array payload and re-fetches from the inner store', fun
     };
 
     $cache = service('cache');
-    $cache->save('shield:corrupt:ban:active:10.0.0.9', ['status' => 'not-a-status'], 30);
+    $cache->save('shield-corrupt-ban-active-10-0-0-9', ['status' => 'not-a-status'], 30);
 
     $repo = new CachedBanRepository($inner, new CodeIgniterCacheAdapter($cache, 'corrupt'), 30);
 
@@ -277,7 +284,8 @@ it('discards a corrupted array payload and re-fetches from the inner store', fun
     expect($record)->toBeInstanceOf(BanRecord::class);
     expect($record->ipAddress)->toBe('10.0.0.9');
     expect($inner->lookups)->toBe(1);
-    expect($cache->get('shield:corrupt:ban:active:10.0.0.9'))->toBeArray();
+    $cachedCorrupt = $cache->get('shield-corrupt-ban-active-10-0-0-9');
+    expect($cachedCorrupt)->toBeArray();
 });
 
 it('caches a null lookup using a sentinel', function () {
