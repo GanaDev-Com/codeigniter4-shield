@@ -20,7 +20,9 @@ final class TrustedProxyInspector
             return false;
         }
 
-        return ! in_array(strtolower($host), ['localhost', '127.0.0.1', '::1', '0.0.0.0'], true);
+        $host = strtolower(trim($host, '[]'));
+
+        return ! in_array($host, ['localhost', '127.0.0.1', '::1', '0.0.0.0'], true);
     }
 
     public static function forwardedHeaderSeen(array $server): bool

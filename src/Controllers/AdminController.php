@@ -4,42 +4,60 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Controllers;
 
-use CodeIgniter\HTTP\RequestInterface;
+use CodeIgniter\Controller;
 use CodeIgniter\HTTP\ResponseInterface;
 use Config\Database;
 use Ganadev\Shield\Codeigniter\Repositories\Ci4BanRepository;
 use Ganadev\Shield\Codeigniter\Repositories\Ci4EventRepository;
+use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
 use Ganadev\Shield\Codeigniter\Support\TrustedProxyInspector;
 use Ganadev\Shield\Core\Config\ShieldConfig;
 use Ganadev\Shield\Core\Rules\RuleRepository;
 
-final class AdminController
+final class AdminController extends Controller
 {
-    public function __construct(
-        private readonly Ci4BanRepository $bans,
-        private readonly Ci4EventRepository $events,
-        private readonly RuleRepository $rules,
-        private readonly ShieldConfig $config,
-    ) {}
+    private readonly Ci4BanRepository $bans;
 
-    public function bans(RequestInterface $request): ResponseInterface
+    private readonly Ci4EventRepository $events;
+
+    private readonly RuleRepository $rules;
+
+    private readonly ShieldConfig $config;
+
+    /**
+     * CodeIgniter instantiates controllers with `new $class()` and calls
+     * initController() afterwards, so all dependencies are resolved here
+     * without constructor arguments.
+     */
+    public function __construct()
     {
-        if (! $this->authorized($request)) {
+        /** @var ShieldResolver $resolver */
+        $resolver = service('shield.resolver') ?? new ShieldResolver;
+
+        $this->bans = new Ci4BanRepository;
+        $this->events = new Ci4EventRepository;
+        $this->rules = $resolver->rules();
+        $this->config = $resolver->config();
+    }
+
+    public function bans(): ResponseInterface
+    {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
         $result = $this->bans->paginate([
-            'ip' => $request->getGet('ip'),
-            'status' => $request->getGet('status'),
-            'active' => $request->getGet('active'),
-        ], $this->perPage($request));
+            'ip' => $this->request->getGet('ip'),
+            'status' => $this->request->getGet('status'),
+            'active' => $this->request->getGet('active') !== null,
+        ], $this->perPage(), $this->currentPage());
 
         return $this->json(['data' => $result]);
     }
 
     public function banDetail(string $id): ResponseInterface
     {
-        if (! $this->authorized(request())) {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
@@ -51,9 +69,9 @@ final class AdminController
         return $this->json(['ban' => $ban]);
     }
 
-    public function release(RequestInterface $request, string $id): ResponseInterface
+    public function release(string $id): ResponseInterface
     {
-        if (! $this->authorized($request)) {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
@@ -62,18 +80,20 @@ final class AdminController
             return $this->json(['error' => 'not_found'], 404);
         }
 
+        $reason = $this->request->getPost('reason');
+
         $released = $this->bans->release(
             $ban,
-            (string) $request->getPost('reason', 'manual_release'),
-            $this->actor($request),
+            is_string($reason) && $reason !== '' ? $reason : 'manual_release',
+            $this->actor(),
         );
 
         return $this->json(['ban' => $released]);
     }
 
-    public function extend(RequestInterface $request, string $id): ResponseInterface
+    public function extend(string $id): ResponseInterface
     {
-        if (! $this->authorized($request)) {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
@@ -82,35 +102,37 @@ final class AdminController
             return $this->json(['error' => 'not_found'], 404);
         }
 
-        $minutes = max(1, (int) $request->getPost('minutes', 60));
+        $minutes = $this->request->getPost('minutes');
+        $minutes = is_numeric($minutes) ? (int) $minutes : 60;
+        $minutes = max(1, $minutes);
         $expires = \DateTimeImmutable::createFromInterface($ban->expiresAt ?? new \DateTimeImmutable);
         $expires = $expires->modify("+{$minutes} minutes");
 
-        $extended = $this->bans->extend($ban, $expires, $this->actor($request));
+        $extended = $this->bans->extend($ban, $expires, $this->actor());
 
         return $this->json(['ban' => $extended]);
     }
 
-    public function events(RequestInterface $request): ResponseInterface
+    public function events(): ResponseInterface
     {
-        if (! $this->authorized($request)) {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
         $result = $this->events->paginate([
-            'ip' => $request->getGet('ip'),
-            'host' => $request->getGet('host'),
-            'rule_id' => $request->getGet('rule_id'),
-            'severity' => $request->getGet('severity'),
-            'decision' => $request->getGet('decision'),
-        ], $this->perPage($request));
+            'ip' => $this->request->getGet('ip'),
+            'host' => $this->request->getGet('host'),
+            'rule_id' => $this->request->getGet('rule_id'),
+            'severity' => $this->request->getGet('severity'),
+            'decision' => $this->request->getGet('decision'),
+        ], $this->perPage(), $this->currentPage());
 
         return $this->json(['data' => $result]);
     }
 
-    public function rules(RequestInterface $request): ResponseInterface
+    public function rules(): ResponseInterface
     {
-        if (! $this->authorized($request)) {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
@@ -130,9 +152,9 @@ final class AdminController
         return $this->json(['version' => '1.0.0', 'count' => count($rules), 'rules' => $rules]);
     }
 
-    public function health(RequestInterface $request): ResponseInterface
+    public function health(): ResponseInterface
     {
-        if (! $this->authorized($request)) {
+        if (! $this->authorized()) {
             return $this->denied();
         }
 
@@ -150,20 +172,21 @@ final class AdminController
 
         try {
             $cache = service('cache');
-            $cache->get('shield:health:probe');
+            $cache->get('shield-health-probe');
         } catch (\Throwable) {
             $cacheOk = false;
         }
 
         $proxyWarning = null;
-        $forwarded = $request->getHeaderLine('X-Forwarded-For') !== ''
-            || $request->getHeaderLine('Forwarded') !== '';
+        $forwarded = $this->request->getHeaderLine('X-Forwarded-For') !== ''
+            || $this->request->getHeaderLine('Forwarded') !== '';
         if ($forwarded && ! TrustedProxyInspector::hasConfiguredProxies()) {
             $proxyWarning = 'Forwarded headers present but trusted proxies are not configured.';
         }
 
         $adminWarning = null;
-        if ($this->config->adminEnabled && $this->config->adminAuthorize === '') {
+        $adminEnabled = (bool) (config('Shield')->adminEnabled ?? false);
+        if ($adminEnabled && $this->config->adminAuthorize === '') {
             $adminWarning = 'Admin panel is enabled but admin.authorize is empty: any authenticated user can manage bans.';
         }
 
@@ -180,20 +203,35 @@ final class AdminController
         ], $healthy ? 200 : 503);
     }
 
-    private function perPage(RequestInterface $request): int
+    private function perPage(): int
     {
-        return min(max((int) $request->getGet('per_page', 50), 1), 200);
+        $perPage = $this->request->getGet('per_page');
+
+        return min(max(is_numeric($perPage) ? (int) $perPage : 50, 1), 200);
     }
 
-    private function authorized(RequestInterface $request): bool
+    private function currentPage(): int
+    {
+        $page = $this->request->getGet('page');
+
+        return max(1, is_numeric($page) ? (int) $page : 1);
+    }
+
+    private function authorized(): bool
     {
         if ($this->config->adminAuthorize === '') {
             return true;
         }
 
-        $user = service('authentication')->user();
+        $user = $this->authenticatedUser();
 
-        return $user !== null && in_array($this->config->adminAuthorize, $user->getPermissions(), true);
+        if ($user === null) {
+            return false;
+        }
+
+        $permissions = method_exists($user, 'getPermissions') ? (array) $user->getPermissions() : [];
+
+        return in_array($this->config->adminAuthorize, $permissions, true);
     }
 
     private function denied(): ResponseInterface
@@ -201,11 +239,38 @@ final class AdminController
         return $this->json(['error' => 'forbidden'], 403);
     }
 
-    private function actor(RequestInterface $request): ?string
+    /**
+     * Resolves the authenticated user without assuming an authentication
+     * service exists: apps without an auth library simply get null.
+     */
+    private function authenticatedUser(): ?object
     {
-        $user = service('authentication')->user();
+        try {
+            $auth = service('authentication');
+        } catch (\Throwable) {
+            return null;
+        }
 
-        return $user !== null ? (string) $user->id : null;
+        if (! is_object($auth) || ! method_exists($auth, 'user')) {
+            return null;
+        }
+
+        $user = $auth->user();
+
+        return is_object($user) ? $user : null;
+    }
+
+    private function actor(): ?string
+    {
+        $user = $this->authenticatedUser();
+
+        if ($user === null) {
+            return null;
+        }
+
+        $id = $user->id ?? null;
+
+        return is_scalar($id) ? (string) $id : null;
     }
 
     private function json(array $data, int $status = 200): ResponseInterface

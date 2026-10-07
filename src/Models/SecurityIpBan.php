@@ -30,11 +30,5 @@ class SecurityIpBan extends Model
         'risk_score' => 'integer',
         'violation_count' => 'integer',
         'offense_count' => 'integer',
-        'banned_at' => 'datetime',
-        'expires_at' => 'datetime',
-        'released_at' => 'datetime',
-        'challenge_passed_at' => 'datetime',
-        'last_seen_at' => 'datetime',
-        'metadata' => 'array',
     ];
 }

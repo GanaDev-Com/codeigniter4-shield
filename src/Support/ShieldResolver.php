@@ -32,7 +32,8 @@ final class ShieldResolver
 {
     public function config(): ShieldConfig
     {
-        $configClass = new ShieldConfigClass;
+        /** @var ShieldConfigClass $configClass */
+        $configClass = config('Shield') ?? new ShieldConfigClass;
 
         return ShieldConfig::fromArray($configClass->toArray());
     }

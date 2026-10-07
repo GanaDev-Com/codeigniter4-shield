@@ -21,11 +21,15 @@ final class Ci4EventRepository implements EventRepositoryInterface
         $model = new SecurityEventModel;
         $builder = $model->builder();
         $builder->where('created_at <', $cutoff->format('Y-m-d H:i:s'));
+        $builder->delete();
 
-        return $builder->delete();
+        return (int) $model->affectedRows();
     }
 
-    public function paginate(array $filters = [], int $perPage = 50)
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function paginate(array $filters = [], int $perPage = 50, int $page = 1): array
     {
         $model = new SecurityEventModel;
         $builder = $model->builder();
@@ -46,6 +50,12 @@ final class Ci4EventRepository implements EventRepositoryInterface
             $builder->where('decision', (string) $filters['decision']);
         }
 
-        return $builder->orderBy('created_at', 'DESC')->paginate($perPage);
+        $page = max(1, $page);
+
+        return $builder
+            ->orderBy('created_at', 'DESC')
+            ->limit($perPage, ($page - 1) * $perPage)
+            ->get()
+            ->getResultArray();
     }
 }

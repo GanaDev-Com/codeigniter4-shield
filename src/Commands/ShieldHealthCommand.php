@@ -36,7 +36,7 @@ final class ShieldHealthCommand extends BaseCommand
 
         try {
             $cache = service('cache');
-            $cache->get('shield:health:probe');
+            $cache->get('shield-health-probe');
             $cacheStatus = 'ok';
         } catch (\Throwable $e) {
             $cacheStatus = 'down ('.$e->getMessage().')';

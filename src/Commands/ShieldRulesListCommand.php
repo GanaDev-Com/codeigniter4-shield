@@ -46,8 +46,8 @@ final class ShieldRulesListCommand extends BaseCommand
         }
 
         CLI::table(
-            ['ID', 'Category', 'Matcher', 'Severity', 'Score', 'Immediate Ban', 'State'],
             $rows,
+            ['ID', 'Category', 'Matcher', 'Severity', 'Score', 'Immediate Ban', 'State'],
         );
 
         CLI::write('Loaded '.count($rows).' rule(s).', 'green');

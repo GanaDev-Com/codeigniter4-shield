@@ -9,6 +9,8 @@ use CodeIgniter\Filters\FilterInterface;
 use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
 use Ganadev\Shield\Codeigniter\Cache\CodeIgniterCacheAdapter;
+use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
+use Ganadev\Shield\Codeigniter\Support\ShieldView;
 use Ganadev\Shield\Core\Config\ShieldConfig;
 use Ganadev\Shield\Core\Context\RequestContext;
 use Ganadev\Shield\Core\Detection\BehaviorCounters;
@@ -18,12 +20,30 @@ use Ganadev\Shield\Core\Privacy\UriMasker;
 
 final class SecurityFirewallFilter implements FilterInterface
 {
+    private readonly ShieldConfig $config;
+
+    private ?ShieldEngine $engine;
+
+    private ?CodeIgniterCacheAdapter $cache;
+
+    private string $adminPrefix;
+
+    /**
+     * All dependencies are optional: CodeIgniter instantiates filters through
+     * `new $className()` (see Filters::createFilter()), so every collaborator
+     * is resolved lazily from the shared services or a fresh resolver.
+     */
     public function __construct(
-        private readonly ShieldEngine $engine,
-        private readonly ShieldConfig $config,
-        private readonly CodeIgniterCacheAdapter $cache,
-        private readonly string $adminPrefix = 'shield',
-    ) {}
+        ?ShieldEngine $engine = null,
+        ?ShieldConfig $config = null,
+        ?CodeIgniterCacheAdapter $cache = null,
+        ?string $adminPrefix = null,
+    ) {
+        $this->engine = $engine;
+        $this->config = $config ?? (new ShieldResolver)->config();
+        $this->cache = $cache;
+        $this->adminPrefix = $adminPrefix ?? (string) (config('Shield')->adminPrefix ?? 'shield');
+    }
 
     public function before(RequestInterface $request, $arguments = null): ?ResponseInterface
     {
@@ -33,10 +53,11 @@ final class SecurityFirewallFilter implements FilterInterface
 
         $context = $this->buildContext($request);
         $counters = $this->readCounters($context);
+        $engine = $this->engine();
 
         try {
-            $cookie = $request->getCookie($this->engine->trustedCookieName());
-            $result = $this->engine->inspect($context, $counters, [
+            $cookie = $request->getCookie($engine->trustedCookieName());
+            $result = $engine->inspect($context, $counters, [
                 'trusted_cookie' => is_string($cookie) ? $cookie : '',
             ]);
         } catch (\Throwable) {
@@ -69,8 +90,15 @@ final class SecurityFirewallFilter implements FilterInterface
 
     private function buildContext(RequestInterface $request): RequestContext
     {
+        // getPath() is relative to baseURL and has no leading slash; core
+        // prefix matching (skip paths, api paths, allowlists) expects one.
+        $path = $request->getPath() ?: '/';
+        if ($path[0] !== '/') {
+            $path = '/'.$path;
+        }
+
         return RequestContext::create(
-            rawUri: $request->getPath() ?: '/',
+            rawUri: $path,
             method: $request->getMethod(),
             host: $request->getHeaderLine('host') ?: 'localhost',
             ip: $request->getIPAddress(),
@@ -117,14 +145,14 @@ final class SecurityFirewallFilter implements FilterInterface
     private function readCounters(RequestContext $context): BehaviorCounters
     {
         try {
-            $unique = $this->cache->increment(
+            $cache = $this->cache();
+            $unique = $cache->increment(
                 "counters:{$context->ip}:unique",
                 $this->config->behaviorWindowSeconds,
             );
-            $notFound = (int) $this->cache->get("counters:{$context->ip}:not_found");
-
+            $notFound = (int) $cache->get("counters:{$context->ip}:not_found");
             $pathKey = strtolower((string) preg_replace('#/{2,}#', '/', $context->rawPath));
-            $pathCount = $this->cache->increment(
+            $pathCount = $cache->increment(
                 'counters:'.$context->ip.':path:'.hash('sha256', $pathKey),
                 $this->config->behaviorWindowSeconds,
             );
@@ -155,7 +183,7 @@ final class SecurityFirewallFilter implements FilterInterface
     private function countNotFound(RequestContext $context): void
     {
         try {
-            $this->cache->increment(
+            $this->cache()->increment(
                 "counters:{$context->ip}:not_found",
                 $this->config->behaviorWindowSeconds,
             );
@@ -185,7 +213,7 @@ final class SecurityFirewallFilter implements FilterInterface
             ],
         ];
 
-        $html = view($this->config->blockedView, $data);
+        $html = ShieldView::render($this->config->blockedView, $data);
 
         $response = service('response');
         $response->setBody($html);
@@ -301,5 +329,15 @@ final class SecurityFirewallFilter implements FilterInterface
         return array_values(array_unique(array_filter(
             ['shield', trim($this->adminPrefix, '/')],
         )));
+    }
+
+    private function engine(): ShieldEngine
+    {
+        return $this->engine ??= service('shield.engine') ?? (new ShieldResolver)->engine($this->config);
+    }
+
+    private function cache(): CodeIgniterCacheAdapter
+    {
+        return $this->cache ??= service('shield.cache') ?? (new ShieldResolver)->cacheAdapter();
     }
 }

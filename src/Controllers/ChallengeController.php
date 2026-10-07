@@ -4,33 +4,50 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter\Controllers;
 
+use CodeIgniter\Controller;
 use CodeIgniter\HTTP\RedirectResponse;
-use CodeIgniter\HTTP\RequestInterface;
 use CodeIgniter\HTTP\ResponseInterface;
+use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
+use Ganadev\Shield\Codeigniter\Support\ShieldView;
 use Ganadev\Shield\Core\Challenge\ChallengeDriverInterface;
 use Ganadev\Shield\Core\Config\ShieldConfig;
 use Ganadev\Shield\Core\Context\RequestContext;
 use Ganadev\Shield\Core\Engine\ShieldEngine;
 
-final class ChallengeController
+final class ChallengeController extends Controller
 {
-    public function __construct(
-        private readonly ChallengeDriverInterface $driver,
-        private readonly ShieldEngine $engine,
-        private readonly ShieldConfig $config,
-    ) {}
+    private readonly ChallengeDriverInterface $driver;
 
-    public function show(RequestInterface $request): ResponseInterface
+    private readonly ShieldEngine $engine;
+
+    private readonly ShieldConfig $config;
+
+    /**
+     * CodeIgniter instantiates controllers with `new $class()` and calls
+     * initController() afterwards, so all dependencies are resolved here
+     * without constructor arguments.
+     */
+    public function __construct()
     {
-        $payload = $this->driver->render($this->context($request));
+        /** @var ShieldResolver $resolver */
+        $resolver = service('shield.resolver') ?? new ShieldResolver;
+
+        $this->driver = service('shield.challenge') ?? $resolver->challengeDriver();
+        $this->engine = service('shield.engine') ?? $resolver->engine();
+        $this->config = $resolver->config();
+    }
+
+    public function show(): ResponseInterface
+    {
+        $payload = $this->driver->render($this->context());
 
         $data = [
             'driver' => $payload->driver,
             'siteKey' => $payload->siteKey,
             'testToken' => (string) ($payload->data['test_token'] ?? ''),
             'csrfToken' => csrf_token(),
-            'redirect' => $this->safeRedirect($request),
-            'error' => (bool) $request->getGet('error'),
+            'redirect' => $this->safeRedirect(),
+            'error' => (bool) $this->request->getGet('error'),
             'branding' => [
                 'title' => $this->config->branding['title'] ?? 'Ganadev Shield',
                 'accent_color' => $this->config->branding['accent_color'] ?? '#22d3ee',
@@ -39,7 +56,7 @@ final class ChallengeController
             ],
         ];
 
-        $html = view($this->config->challengeView, $data);
+        $html = ShieldView::render($this->config->challengeView, $data);
 
         $response = service('response');
         $response->setBody($html);
@@ -49,53 +66,55 @@ final class ChallengeController
         return $response;
     }
 
-    public function verify(RequestInterface $request): RedirectResponse
+    public function verify(): RedirectResponse
     {
-        $context = $this->context($request);
-        $token = (string) $request->getPost('shield_challenge_token');
+        $context = $this->context();
+        $token = (string) $this->request->getPost('shield_challenge_token');
 
         $result = $this->driver->verify($token, $context);
 
         if (! $result->passed) {
-            return redirect()->to('shield/challenge?error=1&redirect='.urlencode($this->safeRedirect($request)));
+            return redirect()->to('shield/challenge?error=1&redirect='.urlencode($this->safeRedirect()));
         }
 
         $this->engine->markChallengePassed($context->ip);
         $cookie = $this->engine->issueTrustedCookie($context);
 
-        $redirectResponse = redirect()->to($this->safeRedirect($request));
+        $redirectResponse = redirect()->to($this->safeRedirect());
 
         if ($cookie !== '') {
             $redirectResponse->setCookie(
-                $this->engine->trustedCookieName(),
-                $cookie,
-                $this->config->trustedTtlMinutes * 60,
-                '/',
-                null,
-                true,
-                true,
-                false,
-                'Lax'
+                name: $this->engine->trustedCookieName(),
+                value: $cookie,
+                expire: $this->config->trustedTtlMinutes * 60,
+                path: '/',
+                secure: true,
+                httponly: true,
+                samesite: 'Lax',
             );
         }
 
         return $redirectResponse;
     }
 
-    private function context(RequestInterface $request): RequestContext
+    private function context(): RequestContext
     {
         return RequestContext::create(
-            rawUri: $request->getPath() ?: '/',
-            method: $request->getMethod(),
-            host: $request->getHeaderLine('host') ?: 'localhost',
-            ip: $request->getIPAddress(),
-            headersSubset: ['user-agent' => $request->getHeaderLine('user-agent')],
+            rawUri: $this->request->getPath() ?: '/',
+            method: $this->request->getMethod(),
+            host: $this->request->getHeaderLine('host') ?: 'localhost',
+            ip: $this->request->getIPAddress(),
+            headersSubset: ['user-agent' => $this->request->getHeaderLine('user-agent')],
         );
     }
 
-    private function safeRedirect(RequestInterface $request): string
+    private function safeRedirect(): string
     {
-        $redirect = (string) $request->getPost('redirect', $request->getGet('redirect', '/'));
+        $redirect = $this->request->getPost('redirect');
+        if (! is_string($redirect)) {
+            $redirect = $this->request->getGet('redirect');
+        }
+        $redirect = is_string($redirect) ? $redirect : '/';
 
         if ($redirect === '' || ! str_starts_with($redirect, '/')) {
             return '/';

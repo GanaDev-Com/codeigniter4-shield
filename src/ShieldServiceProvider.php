@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Ganadev\Shield\Codeigniter;
 
+use CodeIgniter\Config\Services;
 use Ganadev\Shield\Codeigniter\Commands\ShieldHealthCommand;
 use Ganadev\Shield\Codeigniter\Commands\ShieldPruneCommand;
 use Ganadev\Shield\Codeigniter\Commands\ShieldReleaseCommand;
@@ -16,27 +17,46 @@ use Ganadev\Shield\Codeigniter\Support\TrustedProxyInspector;
 
 final class ShieldServiceProvider
 {
+    /**
+     * Registers the shared Shield services and the global firewall filter.
+     *
+     * This is an optional convenience: every component of this package falls
+     * back to a fresh ShieldResolver when the services are missing, so calling
+     * register() is only required when you want shared, pre-built instances
+     * (recommended in app/Config/Events.php on the `pre_system` event).
+     *
+     * Calling it repeatedly rebuilds the services from the current config,
+     * which also makes configuration changes visible to already-resolved code.
+     */
     public static function register(): void
     {
         $resolver = new ShieldResolver;
 
-        service('singleton', 'shield.resolver', fn () => $resolver);
-        service('singleton', 'shield.config', fn () => $resolver->config());
-        service('singleton', 'shield.engine', fn () => $resolver->engine());
-        service('singleton', 'shield.cache', fn () => $resolver->cacheAdapter());
-        service('singleton', 'shield.challenge', fn () => $resolver->challengeDriver());
+        self::setService('shield.resolver', $resolver);
+        self::setService('shield.config', $resolver->config());
+        self::setService('shield.engine', $resolver->engine());
+        self::setService('shield.cache', $resolver->cacheAdapter());
+        self::setService('shield.challenge', $resolver->challengeDriver());
 
         self::registerFilter();
         self::registerCommands();
-        self::registerRoutes();
         self::warnAboutMissingTrustedProxies();
+    }
+
+    private static function setService(string $name, object $value): void
+    {
+        Services::resetSingle($name);
+        Services::set($name, $value);
     }
 
     private static function registerFilter(): void
     {
         $filters = config('Filters');
         $filters->aliases['shield.firewall'] = SecurityFirewallFilter::class;
-        $filters->globals['before'][] = 'shield.firewall';
+
+        if (! in_array('shield.firewall', $filters->globals['before'] ?? [], true)) {
+            $filters->globals['before'][] = 'shield.firewall';
+        }
     }
 
     private static function registerCommands(): void
@@ -50,34 +70,14 @@ final class ShieldServiceProvider
             return;
         }
 
-        if (property_exists($commands, 'shield')) {
-            $commands->shield = array_merge($commands->shield ?? [], [
-                ShieldPruneCommand::class,
-                ShieldReleaseCommand::class,
-                ShieldHealthCommand::class,
-                ShieldReportCommand::class,
-                ShieldRulesListCommand::class,
-                ShieldReplayCommand::class,
-            ]);
-        } else {
-            $commands->shield = [
-                ShieldPruneCommand::class,
-                ShieldReleaseCommand::class,
-                ShieldHealthCommand::class,
-                ShieldReportCommand::class,
-                ShieldRulesListCommand::class,
-                ShieldReplayCommand::class,
-            ];
-        }
-    }
-
-    private static function registerRoutes(): void
-    {
-        $routes = service('routes');
-        if ($routes === null || ! method_exists($routes, 'load')) {
-            return;
-        }
-        $routes->load(__DIR__.'/../routes/shield.php');
+        $commands->shield = array_values(array_unique(array_merge((array) ($commands->shield ?? []), [
+            ShieldPruneCommand::class,
+            ShieldReleaseCommand::class,
+            ShieldHealthCommand::class,
+            ShieldReportCommand::class,
+            ShieldRulesListCommand::class,
+            ShieldReplayCommand::class,
+        ])));
     }
 
     private static function warnAboutMissingTrustedProxies(): void

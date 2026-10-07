@@ -60,7 +60,7 @@ final class ShieldReportCommand extends BaseCommand
             CLI::newLine();
             CLI::write('Top matched rules', 'green');
             $rows = array_map(fn ($row) => [$row['rule_id'], $row['total']], $topRules);
-            CLI::table(['Rule', 'Count'], $rows);
+            CLI::table($rows, ['Rule', 'Count']);
         }
     }
 }

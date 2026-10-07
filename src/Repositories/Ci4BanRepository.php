@@ -115,7 +115,10 @@ final class Ci4BanRepository implements BanRepositoryInterface
         return $this->toRecord($model->find($ban->id));
     }
 
-    public function paginate(array $filters = [], int $perPage = 50)
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function paginate(array $filters = [], int $perPage = 50, int $page = 1): array
     {
         $model = new SecurityIpBan;
         $builder = $model->builder();
@@ -130,7 +133,13 @@ final class Ci4BanRepository implements BanRepositoryInterface
             $builder->whereIn('status', [BanStatus::Active->value, BanStatus::ManualBlock->value]);
         }
 
-        return $builder->orderBy('banned_at', 'DESC')->paginate($perPage);
+        $page = max(1, $page);
+
+        return $builder
+            ->orderBy('banned_at', 'DESC')
+            ->limit($perPage, ($page - 1) * $perPage)
+            ->get()
+            ->getResultArray();
     }
 
     private function toRecord(array $row): BanRecord

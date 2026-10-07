@@ -195,7 +195,7 @@ final class ShieldReplayCommand extends BaseCommand
         foreach ($byCategory as $category => $counts) {
             $rows[] = [mb_substr($category, 0, 52), $counts['total'], $counts['blocked']];
         }
-        CLI::table(['Category', 'Total', 'Blocked'], $rows);
+        CLI::table($rows, ['Category', 'Total', 'Blocked']);
 
         $rate = $totalBlock > 0 ? $detected / $totalBlock : 1.0;
         CLI::newLine();

@@ -60,13 +60,23 @@ composer require ganadev/codeigniter4-shield
 
 Package ini menarik [`ganadev/shield-core`](https://github.com/GanaDev-Com/shield-core) secara otomatis, jadi tidak perlu memasangnya terpisah.
 
-### Publish konfigurasi
+### Konfigurasi (opsional)
 
-```bash
-php spark shield:publish
+Konfigurasi bawaan sudah cukup untuk memulai. Kalau ingin menyesuaikan, buat `app/Config/Shield.php` yang extends `Ganadev\Shield\Codeigniter\Config\Shield`, lalu ubah propertinya di sana.
+
+### Daftarkan service provider
+
+Buka `app/Config/Events.php` dan daftarkan provider pada event `pre_system`:
+
+```php
+Events::on('pre_system', static function (): void {
+    \Ganadev\Shield\Codeigniter\ShieldServiceProvider::register();
+});
 ```
 
-Atau buat `app/Config/Shield.php` secara manual dengan extends `Ganadev\Shield\Codeigniter\Config\Shield`.
+Satu baris ini mendaftarkan service Shield (engine, resolver, cache, challenge driver), filter firewall global, dan perintah CLI sekaligus. Panggilan berulang aman — provider membangun ulang service dari konfigurasi terkini.
+
+> Tanpa baris ini Shield tetap berjalan dengan fallback internal, tapi filter firewall tidak otomatis terpasang dan perintah `php spark shield:*` tidak terdaftar.
 
 ### Jalankan migrations
 
@@ -78,7 +88,9 @@ php spark migrate --all
 
 ## Daftarkan Filter
 
-Buka `app/Config/Filters.php`, lalu daftarkan filter Shield **secara global** — posisinya menentukan segalanya:
+Kalau Anda memakai `ShieldServiceProvider::register()` seperti di atas, filter firewall **sudah otomatis** terdaftar global — tidak perlu melakukan apa pun lagi.
+
+Kalau memasang manual tanpa provider, buka `app/Config/Filters.php`, lalu daftarkan filter Shield **secara global** — posisinya menentukan segalanya:
 
 ```php
 public $aliases = [
@@ -191,6 +203,12 @@ SHIELD_TURNSTILE_SECRET_KEY=your-secret-key
 ```
 
 Ada juga panel admin opsional untuk melihat laporan, mengelola ban, dan menelusuri event. Panel ini **default-nya nonaktif**, karena halaman tersebut menampilkan reputasi pengguna — dan wajib dibatasi dengan izin `admin.authorize` kalau diaktifkan.
+
+---
+
+## Keterbatasan yang diketahui
+
+- **Permintaan tanpa route (404) tidak diperiksa.** CodeIgniter melempar `PageNotFoundException` ketika URI tidak cocok dengan route mana pun, dan hal itu terjadi sebelum filter `before` global sempat berjalan. Scanner yang membidik path tak dikenal (misalnya `/.env`) oleh karena itu tidak disentuh Shield. Untuk lapisan ini, andalkan WAF di depan (Cloudflare, ModSecurity) atau aturan `mod_rewrite` di server.
 
 ---
 

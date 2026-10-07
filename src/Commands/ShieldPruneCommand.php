@@ -29,12 +29,14 @@ final class ShieldPruneCommand extends BaseCommand
         $cutoff = date('Y-m-d H:i:s', strtotime("-{$days} days"));
 
         $eventModel = new SecurityEvent;
-        $deletedEvents = $eventModel->where('created_at <', $cutoff)->delete();
+        $eventModel->where('created_at <', $cutoff)->delete();
+        $deletedEvents = (int) $eventModel->affectedRows();
 
         $banModel = new SecurityIpBan;
-        $deletedBans = $banModel->where('status', 'released')
+        $banModel->where('status', 'released')
             ->where('expires_at <', date('Y-m-d H:i:s'))
             ->delete();
+        $deletedBans = (int) $banModel->affectedRows();
 
         $banModel->where('status', 'expired')->delete();
 

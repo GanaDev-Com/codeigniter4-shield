@@ -7,6 +7,7 @@ namespace Ganadev\Shield\Codeigniter\Commands;
 use CodeIgniter\CLI\BaseCommand;
 use CodeIgniter\CLI\CLI;
 use Ganadev\Shield\Codeigniter\Support\InputValue;
+use Ganadev\Shield\Codeigniter\Support\ShieldResolver;
 
 final class ShieldReleaseCommand extends BaseCommand
 {
@@ -37,7 +38,7 @@ final class ShieldReleaseCommand extends BaseCommand
 
         $reason = (new InputValue)->string($params['reason'] ?? '') ?? 'manual_release';
 
-        $engine = service('shield.engine');
+        $engine = service('shield.engine') ?? (new ShieldResolver)->engine();
         $released = $engine->releaseBan($ip, $reason, 'cli:'.get_current_user());
 
         if (! $released) {

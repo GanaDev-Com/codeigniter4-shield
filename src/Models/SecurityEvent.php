@@ -25,6 +25,5 @@ class SecurityEvent extends Model
 
     protected array $casts = [
         'score_delta' => 'integer',
-        'created_at' => 'datetime',
     ];
 }
